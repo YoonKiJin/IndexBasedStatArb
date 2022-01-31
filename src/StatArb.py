@@ -36,12 +36,19 @@ class IndexBasedStatArb:
         self.allHoldingPeriods = []
 
     def updatePairState(self, currentIndex, currentCash):
+        """
+        Method that is called at every index of data. Updates the "state" of the pair we are back testing based on
+        the price of each ETP/stock at each new index
+        :param currentIndex: the current index of data we are at
+        :param currentCash: cash we currently have that can be used to open trades
+        :return: currentCash after the state of the pair is updated(after change in price, we either open a trade, close a trade, or no action)
+        """
 
         currentTime = self.inv.minData.loc[currentIndex, "Time"]
 
         print("INDEX", currentIndex, "- TIME", currentTime, "- CAPITAL", currentCash)
 
-        if currentIndex < 380: # skip day 1
+        if currentIndex < 380: # skip day 1 - because we need one previous day to update new day info
             return currentCash
 
         if currentTime == 901:
@@ -66,17 +73,22 @@ class IndexBasedStatArb:
         if self.isTradeOpen == True:
 
             if self.currentSpreadZeroedOut <= -0.5 * self.prevDayStd:
+
                 if self.isTradeExitProfitable(currentIndex, currentCash):
+
                     currentCash = self.closeTrade(currentIndex, currentCash, currentTime)
                     return currentCash
 
             if currentIndex - self.tradeOpenIndex >= 30:
+
                 if self.isTradeExitProfitable(currentIndex, currentCash):
+
                     print("Profit Capture")
                     currentCash = self.closeTrade(currentIndex, currentCash, currentTime)
                     return currentCash
 
             if currentTime >= 1500:
+
                 currentCash = self.closeTrade(currentIndex, currentCash, currentTime)
                 print("Trade Closed - Over 3:00pm")
                 return currentCash
@@ -89,7 +101,7 @@ class IndexBasedStatArb:
         self.invShareNum = round(self.norm.minData.loc[currentIndex, "Open"] / self.inv.minData.loc[currentIndex, "Open"])
         self.normShareNum = 1
 
-        buyCommission = 0.000192
+        buyCommission = 0.000192 # commission when a position is opened
 
         invBasePositionSize = self.inv.minData.loc[currentIndex, "Open"] * self.invShareNum * (1 + buyCommission)
         normBasePositionSize = self.norm.minData.loc[currentIndex, "Open"] * self.normShareNum * (1 + buyCommission)
@@ -148,8 +160,15 @@ class IndexBasedStatArb:
         return currentCash
 
     def isTradeExitProfitable(self, currentIndex, currentCash):
+        """
+        Calculate the return of a currently open trade if closed at current index. Used to see if this return is
+        greater than 0, i.e. profitable.
+        :param currentIndex: the current index of data we are at
+        :param currentCash: cash we currently have that can be used to open trades
+        :return: returns a boolean value, True if the return of the trade at current index is greater than 0
+        """
 
-        sellCommission = 0.000192
+        sellCommission = 0.000192 # commission when a position is closed
 
         cashAfterTrade = currentCash
 
@@ -163,6 +182,12 @@ class IndexBasedStatArb:
 
 
     def getCurrentSpreadZeroed(self, currentIndex):
+        """
+        Calculates the percent movement of each asset in the pair(starting from the previous day market open) and uses
+        this movement to calculate the current spread between these two percent movements
+        :param currentIndex: the current index of data we are at
+        :return: returns the percent spread between the two assets' percent movements
+        """
 
         self.invCurrentPctMvt += IndexBasedStatArb.getPricePctChange(self.inv, currentIndex) * -1
         self.normCurrentPctMvt += IndexBasedStatArb.getPricePctChange(self.norm, currentIndex)
@@ -184,6 +209,15 @@ class IndexBasedStatArb:
 
 
     def updateNewDayInfo(self, currentIndex):
+        """
+        Method that is called whenever we arrive at a new day.
+        Recalculate the
+            pct movement of the assets of our pair based on the new day
+            and
+            previous day's pct spreads standard deviation and mean values by calling updatePrevDaySpreadsMeanAndStd()
+        :param currentIndex: the current index of data we are at
+        :return:
+        """
         # exclude the first 15 min
         start = currentIndex - (380 - 15)
         end = currentIndex - 1
