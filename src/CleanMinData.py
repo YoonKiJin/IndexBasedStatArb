@@ -45,7 +45,11 @@ class MinDataCleaner:
         return minDataDf
 
     def dropRowsOfTimeAfter1520(self, minDataAsList):
-        # standardize data by using time period from 901 to 1520
+        """
+        Method that standardizes data by using time period from 901 to 1520, call fillInMissingRows()
+        :param minDataAsList: minData as list datatype
+        :return:
+        """
         index = 0
         while index < len(minDataAsList):
             currentRow = minDataAsList[index]
@@ -65,7 +69,7 @@ class MinDataCleaner:
             minDataAsList.insert(0, firstRow)
 
         # Date changes are signaled by comparing current and next row
-        # placeHolderRow at the end helps avoid index out of bounds error
+        # placeHolderRow at the end to avoid index out of bounds error
         # placeHolderRow requirements:
         #   - minimum length 2
         #   - first element must be a different value from the date of the very last row of the data (thus, 0 is used)
@@ -101,7 +105,7 @@ class MinDataCleaner:
             prevRowDate = prevRow[0]
 
             if currentRowTime != correctTime:
-                if currentRowDate != prevRowDate:  # current row is the first row of the day but time is not 901
+                if currentRowDate != prevRowDate:
                     newRow = currentRow.copy()
                     newRow[1] = correctTime
                     newRow[6] = 0  # trading volume = 0
@@ -121,7 +125,7 @@ class MinDataCleaner:
             index += 1
             correctTime += 1
 
-        minDataAsList.pop()  # delete placeHolderRow once missing rows are filled
+        minDataAsList.pop() # delete placeHolderRow once missing rows are filled
 
     def turnListDataIntoPandasDf(self, minDataAsList):
         minDataDf = pd.DataFrame(minDataAsList, columns=["Date", "Time", "Open", "High", "Low", "Close", "Volume"])
@@ -140,27 +144,19 @@ class MinDataCleaner:
         return minDataDf
 
     def addTimeFilterToMinDataDf(self, minDataDf, startDate, endDate):
-
         timeFilt = (minDataDf["Date"] >= pd.to_datetime(startDate)) & (minDataDf["Date"] <= pd.to_datetime(endDate))
-
         minDataDf = minDataDf[timeFilt]
-
         minDataDf.reset_index(inplace=True)
-
         return minDataDf
 
     def addMoreTypesOfDataToDf(self, minDataDf):
         pctChangeIndexPeriod = 1
-        minDataDf["OpenPctChangeSummed"] = np.cumsum(minDataDf["Open"].pct_change(periods=pctChangeIndexPeriod))
-        # first value for ClosePctChangeSummed will be NaN because the very first values has no value
-        # before it to calculate a pct change from
-        minDataDf.loc[0, "OpenPctChangeSummed"] = 0
 
-        pctChangeIndexPeriod = 1
+        minDataDf["OpenPctChangeSummed"] = np.cumsum(minDataDf["Open"].pct_change(periods=pctChangeIndexPeriod))
+        minDataDf.loc[0, "OpenPctChangeSummed"] = 0 # first value is NAN
+
         minDataDf["ClosePctChangeSummed"] = np.cumsum(minDataDf["Close"].pct_change(periods=pctChangeIndexPeriod))
-        # first value for ClosePctChangeSummed will be NaN because the very first values has no value
-        # before it to calculate a pct change from
-        minDataDf.loc[0, "ClosePctChangeSummed"] = 0
+        minDataDf.loc[0, "ClosePctChangeSummed"] = 0  # first value is NAN
 
     def saveCleanedDataAsCsv(self, cleanedDataDf, stockCode):
         cleanedDataDf.to_csv("minData/" + str(stockCode) + ".csv", index = False)
