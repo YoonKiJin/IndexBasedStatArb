@@ -69,12 +69,14 @@ class BackTester:
 
     def runBackTest(self):
 
-        StatArbInstance = StatArb.IndexBasedStatArb(inv=self.invAsset, norm=self.normAsset, invBidAskSpread=15, normBidAskSpread=15, minPriceSpread=25, minStd=2.5)
+        StatArbInstance = StatArb.IndexBasedStatArb(inv=self.invAsset, norm=self.normAsset, invBidAskSpread=15, normBidAskSpread=15, minPriceSpread=30, minStd=3)
 
         for i in range(len(self.invAsset.minData)):
             self.currentCash = StatArbInstance.updatePairState(i, self.currentCash)
 
         self.printBackTestResults(StatArbInstance)
+
+        self.plotBackTestPeriodAllSpreads()
 
     def printBackTestResults(self, StatArbInstance):
         print(self.invAsset.stockCode, self.normAsset.stockCode)
@@ -87,20 +89,52 @@ class BackTester:
         print("Performance(pct):", 100 * (self.currentCash - self.initialCash) / self.initialCash, "%")
 
 
+    def plotBackTestPeriodAllSpreads(self):
+
+        invPctMvtInverted, normPctMvt = self.getPctMvtData()
+
+        spreads = invPctMvtInverted - normPctMvt
+
+        plt.plot(spreads, color="green", label="spreads")
+        plt.plot(list(invPctMvtInverted), color="orange", label=self.invCode + "inverted")
+        plt.plot(list(normPctMvt), color="cyan", label=self.normCode)
+
+        plt.axhline(y=0.004, color='blue', linestyle='-') # spreads percent markers
+        plt.axhline(y=0.003, color='blue', linestyle='-')
+        plt.axhline(y=0.002, color='blue', linestyle='-')
+        plt.axhline(y=0.001, color='blue', linestyle='-')
+        plt.axhline(y=0, color='red', linestyle='-')
+
+    def getPctMvtData(self):
+        invPctMvt = self.invAsset.minData["OpenPctChangeSummed"]
+        invPctMvtInverted = invPctMvt * -1
+
+        normPctMvt = self.normAsset.minData["OpenPctChangeSummed"]
+
+        return invPctMvtInverted, normPctMvt
+
+
+
 def main():
-    Pair1BackTester = BackTester(initialCash=1000000, invCode="A145670", normCode="A278530", startDate="", endDate="")
+    Pair1BackTester = BackTester(initialCash=0, invCode="", normCode="", startDate="", endDate="")
     Pair1BackTester.runBackTest()
 
     """
-    inv     norm
-    A145670 Q530091
-    A252410 Q550067
-    Q530092 Q570067
-    Q500061 Q500060
+        inv assets    
+    A145670 
+    A252410 
+    A114800
+    A123310
+    A253240
+    A306520
     
-    Q530094 Q500062
-    Q500063 A232080 
-    A301410 Q530093
+        norm assets
+    A069500
+    A148020
+    A226490
+    A337140
+    A237350
+    A278530
     """
 
     plt.legend(loc="upper left")
