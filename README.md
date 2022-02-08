@@ -2,20 +2,15 @@
 Statistical Arbitrage based automated algorithmic trading program
 
 
-
-To explain the structure of the project early on:
 CleanMinData.py
-  takes in raw data and 
+  takes in raw data and cleans it
 
 StatArb.py
-
+  the actual strategy
 
 BackTesterMinData.py
   runs StatArb.py on the historical prices of two ETPs
 
-
-
-  
 minDataUncleaned
   raw data(price per minute)
   
