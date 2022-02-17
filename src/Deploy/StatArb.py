@@ -737,40 +737,21 @@ if __name__ == '__main__':
 
     StatArb.checkRemainingSignalCount()
 
-    # kospi inv
-    DataGather1   = DataGather(stockCode="A145670")
-    DataGather2   = DataGather(stockCode="A252410")
-    DataGather3   = DataGather(stockCode="Q530092")
-    DataGather4   = DataGather(stockCode="Q500061")
 
-    # kospi norm
-    DataGather5   = DataGather(stockCode="Q530091")
-    DataGather6   = DataGather(stockCode="Q550067")
-    DataGather7   = DataGather(stockCode="Q570067")
-    DataGather8   = DataGather(stockCode="Q500060")
+        # DataGather instances
 
-    # kosdaq inv
-    DataGather9   = DataGather(stockCode="Q530094")
-    DataGather10  = DataGather(stockCode="Q500063")
-    DataGather11  = DataGather(stockCode="A301410")
+    DataGather1   = DataGather(stockCode="")
+    DataGather2   = DataGather(stockCode="")
+    DataGather3   = DataGather(stockCode="")
+    DataGather4   = DataGather(stockCode="")
+    DataGather5   = DataGather(stockCode="")
+    DataGather6   = DataGather(stockCode="")
 
-    # kosdaq norm
-    DataGather12  = DataGather(stockCode="Q500062")
-    DataGather13  = DataGather(stockCode="Q570068")
-    DataGather14  = DataGather(stockCode="Q530093")
+        # StatArb instances
 
-        # StatArb instances - KOSPI200 / KOSPI
-
-    Pair1  = StatArb(invCode="A145670", normCode="Q570067")
-    Pair2  = StatArb(invCode="A252410", normCode="Q550067")
-    Pair3  = StatArb(invCode="Q530092", normCode="Q530091")
-    Pair4  = StatArb(invCode="Q500061", normCode="Q500060")
-
-        # StatArb instances - KOSDAQ150
-
-    Pair5  = StatArb(invCode="Q530094", normCode="Q500062")
-    Pair6  = StatArb(invCode="Q500063", normCode="Q570068")
-    Pair7  = StatArb(invCode="A301410", normCode="Q530093")
+    Pair1  = StatArb(invCode="", normCode="")
+    Pair2  = StatArb(invCode="", normCode="")
+    Pair3  = StatArb(invCode="", normCode="")
 
     StatArb.calculateCashToAllocatePerTrade()
 
@@ -797,30 +778,18 @@ if __name__ == '__main__':
                 print(datetime.now())
                 print(status.GetLimitRemainCount(0), "Order Requests Left", status.GetLimitRemainCount(1), "Signal Requests Left")
 
-                    # DataGathering
+                    # Data Gathering
                 DataGather1.updateData()
                 DataGather2.updateData()
                 DataGather3.updateData()
                 DataGather4.updateData()
                 DataGather5.updateData()
                 DataGather6.updateData()
-                DataGather7.updateData()
-                DataGather8.updateData()
-                DataGather9.updateData()
-                DataGather10.updateData()
-                DataGather11.updateData()
-                DataGather12.updateData()
-                DataGather13.updateData()
-                DataGather14.updateData()
 
-                    # TradablePairInstances
+                    # Tradable Pairs
                 Pair1.updatePairState()
                 Pair2.updatePairState()
-                Pair3.updatePairState()
-                Pair4.updatePairState()
-                Pair5.updatePairState()
-                Pair6.updatePairState()      
-                Pair7.updatePairState()          
+                Pair3.updatePairState()       
 
                 endTime = time.time()
 
@@ -846,16 +815,5 @@ if __name__ == '__main__':
             DataGather4.dayEndDataCalculations()
             DataGather5.dayEndDataCalculations()
             DataGather6.dayEndDataCalculations()
-            DataGather7.dayEndDataCalculations()
-            DataGather8.dayEndDataCalculations()
-            DataGather9.dayEndDataCalculations()
-            DataGather10.dayEndDataCalculations()
-            DataGather11.dayEndDataCalculations()
-            DataGather12.dayEndDataCalculations()
-            DataGather13.dayEndDataCalculations()
-            DataGather14.dayEndDataCalculations()
 
             sys.exit()
-
-
-
