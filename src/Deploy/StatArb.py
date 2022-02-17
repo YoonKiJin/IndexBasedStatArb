@@ -6,7 +6,6 @@ from datetime import datetime
 import time
 import csv
 import pandas as pd
-import slack
 import math
 
 from DataGather import DataGather
@@ -35,20 +34,13 @@ class StatArb:
         self.invCode = invCode
         self.normCode = normCode
 
-        ################################
-
         self.prevDayMean = 0
         self.prevDayStd = 0
-
-        ################################
 
         self.minPriceSpread = minPriceSpread
 
         self.minStdSpread = minStdSpread # minimum number of standard deviations from previous day mean
 
-        ################################
-
-        # inv
 
         self.invCurrentAsk = 0
         self.invPrevAsk = 0
@@ -58,9 +50,6 @@ class StatArb:
         self.invAskVol = 0
         self.invBidVol = 0
         
-        ################################
-
-        # norm
 
         self.normCurrentAsk = 0
         self.normPrevAsk = 0
@@ -70,14 +59,12 @@ class StatArb:
         self.normAskVol = 0
         self.normBidVol = 0
 
-        ################################
 
         self.invEtfcurrentPctMvt = 0
         self.normEtfcurrentPctMvt = 0
 
         self.currentSpread = 0
 
-        ################################
 
         self.tradeIsOpen = False
 
@@ -86,7 +73,6 @@ class StatArb:
         self.invShareNum = 0
         self.normShareNum = 0       
 
-        ################################
 
         self.updateNewDay()
 
@@ -303,7 +289,6 @@ class StatArb:
         return pctChange
 
 
-
     def enoughCashToOpenTrade(self):
 
         if StatArb.numTradesCurrentlyOpen >= StatArb.numAllocationsOfCash:
@@ -326,118 +311,13 @@ class StatArb:
         else:
             return False
 
+
     @classmethod
     def calculateCashToAllocatePerTrade(cls):
         numPositionsOpen = StatArb.getNumPositionsCurrentlyOpen()
         if numPositionsOpen == 0:
             currentTotalCash = StatArb.getCurrentCash()
             StatArb.currentCashAllocationPerTrade = currentTotalCash / StatArb.numAllocationsOfCash
-
-
-
-    def openPairTrade(self):
-
-        StatArb.openPositionAtGivenPrice(self.invCode, self.invShareNum, self.invCurrentAsk)
-        StatArb.openPositionAtGivenPrice(self.normCode, self.normShareNum, self.normCurrentAsk)
-
-        time.sleep(0.1) # required due to connection issues - this number should be tweaked at discretion of user
-
-        if StatArb.positionIsCurrentlyOpen(self.invCode) == False or StatArb.positionIsCurrentlyOpen(self.normCode) == False:
-
-            StatArb.checkRemainingSignalCount()
-
-            StatArb.cancelAnyUnfilledOrders()
-
-            self.closeAllPositionsForCurrentPairAtMarketPrice()
-
-            numPositions = StatArb.getNumPositionsCurrentlyOpen()
-            positions = StatArb.getOpenPositions()
-            unfilledOrders = StatArb.getUnfilledOrders()
-
-            filePath = "DayTradeData.csv"
-            with open(filePath, 'a', newline="") as csvfile: 
-                csvwriter = csv.writer(csvfile) 
-                csvwriter.writerow(["--------------------------------------------------------------"])
-                csvwriter.writerow(["TRADE OPEN FAILED"])
-                csvwriter.writerow(["numPositions   | ", str(numPositions)])
-                csvwriter.writerow(["positions      | ", str(positions)])
-                csvwriter.writerow(["unfilledOrders | ", str(unfilledOrders)])
-                csvwriter.writerow(["Failed to open trade", self.invCode, self.normCode])
-                csvwriter.writerow(["--------------------------------------------------------------"])
-        
-            return
-
-        self.tradeIsOpen = True
-
-        StatArb.numTradesCurrentlyOpen += 1
-        
-        self.tradeOpenTime = datetime.now()
-
-        filePath = "DayTradeData.csv"
-        with open(filePath, 'a', newline="") as csvfile: 
-            csvwriter = csv.writer(csvfile) 
-            csvwriter.writerow(["--------------------------------------------------------------"])
-            csvwriter.writerow(["TRADE OPEN"])
-            csvwriter.writerow(["Time", self.tradeOpenTime])
-            csvwriter.writerow(["invCode", self.invCode, "| normCode", self.normCode])
-            csvwriter.writerow(["currentSpread", round(self.currentSpread, 5), "| invEtfPriceSpread", round(self.currentSpread * self.invCurrentAsk, 5)])
-            csvwriter.writerow(["invCurrentAsk", self.invCurrentAsk, "| invShareNum", self.invShareNum, "| invAskVol", self.invAskVol, "| invBidVol", self.invBidVol])
-            csvwriter.writerow(["normCurrentAsk", self.normCurrentAsk, "| normShareNum", self.normShareNum, "| normAskVol", self.normAskVol, "| normBidVol", self.normBidVol])
-            csvwriter.writerow(["--------------------------------------------------------------"])
-
-    def closePairTrade(self, tradeReturn):
-
-        StatArb.closePositionAtGivenPrice(self.normCode, self.normShareNum, self.normCurrentBid)
-        StatArb.closePositionAtGivenPrice(self.invCode, self.invShareNum, self.invCurrentBid)
-        
-        time.sleep(0.1) # required due to connection issues - this number should be tweaked at discretion of user
-
-        if StatArb.positionIsCurrentlyOpen(self.invCode) == True or StatArb.positionIsCurrentlyOpen(self.normCode) == True:
-
-            StatArb.checkRemainingSignalCount()
-
-            StatArb.cancelAnyUnfilledOrders()
-
-            self.closeAllPositionsForCurrentPairAtMarketPrice()
-
-            numPositions = StatArb.getNumPositionsCurrentlyOpen()
-            positions = StatArb.getOpenPositions()
-            unfilledOrders = StatArb.getUnfilledOrders()
-
-            filePath = "DayTradeData.csv"
-            with open(filePath, 'a', newline="") as csvfile: 
-                csvwriter = csv.writer(csvfile) 
-                csvwriter.writerow(["--------------------------------------------------------------"])
-                csvwriter.writerow(["TRADE OPEN FAILED"])
-                csvwriter.writerow(["numPositions   | ", str(numPositions)])
-                csvwriter.writerow(["positions      | ", str(positions)])
-                csvwriter.writerow(["unfilledOrders | ", str(unfilledOrders)])
-                csvwriter.writerow(["Failed to open trade", self.invCode, self.normCode])
-                csvwriter.writerow(["--------------------------------------------------------------"])
-            
-            return
-
-        self.tradeIsOpen = False
-
-        StatArb.numTradesCurrentlyOpen -= 1
-
-        holdingPeriodInSec = (datetime.now() - self.tradeOpenTime).seconds
-        holdingPeriodInMin = holdingPeriodInSec / 60
-
-        filePath = "DayTradeData.csv"
-        with open(filePath, 'a', newline="") as csvfile: 
-            csvwriter = csv.writer(csvfile) 
-            csvwriter.writerow(["--------------------------------------------------------------"])
-            csvwriter.writerow(["TRADE CLOSE"])
-            csvwriter.writerow(["Time", datetime.now()])
-            csvwriter.writerow(["invCode", self.invCode, "| normCode", self.normCode])
-            csvwriter.writerow(["currentSpread", round(self.currentSpread, 5), "| holdingPeriodInMin", holdingPeriodInMin])
-            csvwriter.writerow(["invCurrentAsk", self.invCurrentAsk, "| invCurrentBid", self.invCurrentBid, "| invShareNum", self.invShareNum, "| invAskVol", self.invAskVol, "| invBidVol", self.invBidVol])
-            csvwriter.writerow(["normCurrentAsk", self.normCurrentAsk, "| normCurrentBid", self.normCurrentBid,"| normShareNum", self.normShareNum, "| normAskVol", self.normAskVol, "| normBidVol", self.normBidVol])
-            csvwriter.writerow(["tradeReturn", tradeReturn])
-            csvwriter.writerow(["--------------------------------------------------------------"])
-        
-
 
 
     def openPairTrade(self):
@@ -508,7 +388,6 @@ class StatArb:
             csvwriter.writerow(["invCurrentAsk", self.invCurrentAsk, "| invShareNum", self.invShareNum, "| invAskVol", self.invAskVol, "| invBidVol", self.invBidVol])
             csvwriter.writerow(["normCurrentAsk", self.normCurrentAsk, "| normShareNum", self.normShareNum, "| normAskVol", self.normAskVol, "| normBidVol", self.normBidVol])
             csvwriter.writerow(["--------------------------------------------------------------"])
-
 
     def closePairTrade(self, tradeReturn):
         """
@@ -641,13 +520,12 @@ class StatArb:
         orderObj.SetInputValue(0, "1")
         orderObj.SetInputValue(1, accountNum)
         orderObj.SetInputValue(2, accFlag[0])
-        orderObj.SetInputValue(3, stockCode) # stock code
-        orderObj.SetInputValue(4, numShares) # num shares
+        orderObj.SetInputValue(3, stockCode)
+        orderObj.SetInputValue(4, numShares)
         orderObj.SetInputValue(5, price)
         orderObj.SetInputValue(7, "0")
         orderObj.SetInputValue(8, "01")
         orderObj.BlockRequest()
-
 
 
     def cancelAnyWronglyOpenPositions(self):
@@ -670,9 +548,7 @@ class StatArb:
                     csvwriter.writerow(["cancelAnyWronglyOpenPositions", self.invCode, self.normCode])
                     csvwriter.writerow(["--------------------------------------------------------------"])
         
-        
-
-        
+    
     def closeAllPositionsForCurrentPairAtMarketPrice(self):
 
         StatArb.cancelAnyUnfilledOrders()
@@ -697,7 +573,7 @@ class StatArb:
         accFlag = objTrade.GoodsList(accountNum, 1)
         
         orderObj.SetInputValue(0, "1")
-        orderObj.SetInputValue(1, accountNum) # account number
+        orderObj.SetInputValue(1, accountNum)
         orderObj.SetInputValue(2, accFlag[0])
         orderObj.SetInputValue(3, stockCode)
         orderObj.SetInputValue(4, numShares)
@@ -734,8 +610,8 @@ class StatArb:
         for i in range(0, numPositions):
             stockCode = cpBalance.GetDataValue(12, i)
             numShares = cpBalance.GetDataValue(15, i)
-            buyPrice = cpBalance.GetDataValue(1, i) ######################################################################## ?????????
-            positions.append({"stockCode": stockCode, "numShares": numShares, "buyPrice": buyPrice})
+            breakEvenPrice = cpBalance.GetDataValue(18, i)
+            positions.append({"stockCode": stockCode, "numShares": numShares, "breakEvenPrice": breakEvenPrice})
 
         return positions
  
@@ -840,7 +716,7 @@ class StatArb:
         cpCash.SetInputValue(1, accFlag[0])
         cpCash.BlockRequest()
 
-        return cpCash.GetHeaderValue(9) # 증거금 100% 주문 가능 금액 # 9 10 47 all work
+        return cpCash.GetHeaderValue(9)k
 
 
     @classmethod
@@ -861,74 +737,40 @@ if __name__ == '__main__':
 
     StatArb.checkRemainingSignalCount()
 
-    # kospi inv - main
+    # kospi inv
     DataGather1   = DataGather(stockCode="A145670")
     DataGather2   = DataGather(stockCode="A252410")
     DataGather3   = DataGather(stockCode="Q530092")
     DataGather4   = DataGather(stockCode="Q500061")
 
-    # kospi norm - main
+    # kospi norm
     DataGather5   = DataGather(stockCode="Q530091")
     DataGather6   = DataGather(stockCode="Q550067")
     DataGather7   = DataGather(stockCode="Q570067")
     DataGather8   = DataGather(stockCode="Q500060")
 
-    # kosdaq inv - main
+    # kosdaq inv
     DataGather9   = DataGather(stockCode="Q530094")
     DataGather10  = DataGather(stockCode="Q500063")
     DataGather11  = DataGather(stockCode="A301410")
 
-    # kosdaq norm - main
+    # kosdaq norm
     DataGather12  = DataGather(stockCode="Q500062")
     DataGather13  = DataGather(stockCode="Q570068")
     DataGather14  = DataGather(stockCode="Q530093")
 
         # StatArb instances - KOSPI200 / KOSPI
 
-    Pair1  = StatArb(invCode="A145670", normCode="Q570067") # good pair
-    Pair2  = StatArb(invCode="A252410", normCode="Q550067") # to be observed
-    Pair3  = StatArb(invCode="Q530092", normCode="Q530091") # to be observed
-    Pair4  = StatArb(invCode="Q500061", normCode="Q500060") # to be observed
+    Pair1  = StatArb(invCode="A145670", normCode="Q570067")
+    Pair2  = StatArb(invCode="A252410", normCode="Q550067")
+    Pair3  = StatArb(invCode="Q530092", normCode="Q530091")
+    Pair4  = StatArb(invCode="Q500061", normCode="Q500060")
 
         # StatArb instances - KOSDAQ150
 
-    Pair5  = StatArb(invCode="Q530094", normCode="Q500062") # good pair
-    Pair6  = StatArb(invCode="Q500063", normCode="Q570068") # to be observed
-    Pair7  = StatArb(invCode="A301410", normCode="Q530093") # good pair in terms of capturing profits - but keeps failing in position open/close - observe
-
-    #################################################################################
-    mmm = datetime.now().replace(hour=8, minute=55, second=0, microsecond=0)
-    while datetime.now() < mmm:
-        DataGather.checkConnectionWithCreon()
-
-        #########
-        print(status.GetLimitRemainCount(0), "Order Requests Left", status.GetLimitRemainCount(1),
-              "Signal Requests Left")
-
-        cpCash = win32com.client.Dispatch('CpTrade.CpTdNew5331A')
-        objTrade = win32com.client.Dispatch('CpTrade.CpTdUtil')
-
-        objTrade.TradeInit(0)
-        accountNum = objTrade.AccountNumber[0]
-        accFlag = objTrade.GoodsList(accountNum, 1)  # -1:전체,1:주식,2:선물/옵션
-
-        cpCash.SetInputValue(0, accountNum)  # 계좌번호
-        cpCash.SetInputValue(1, accFlag[0])  # 상품구분 - 주식 상품 중 첫번째
-        cpCash.BlockRequest()
-
-        print(cpCash.GetHeaderValue(9))
-
-        print(status.GetLimitRemainCount(0), "Order Requests Left", status.GetLimitRemainCount(1),
-              "Signal Requests Left")
-        #########
-
-        DataGather.checkRemainingSignalCount()
-
-        time.sleep(90)
-    #################################################################################
-
-
-
+    Pair5  = StatArb(invCode="Q530094", normCode="Q500062")
+    Pair6  = StatArb(invCode="Q500063", normCode="Q570068")
+    Pair7  = StatArb(invCode="A301410", normCode="Q530093")
 
     StatArb.calculateCashToAllocatePerTrade()
 
@@ -987,25 +829,6 @@ if __name__ == '__main__':
                 time.sleep(1)
                 print()
 
-            # if datetime.now().hour == 15 and datetime.now().minute == 0:
-
-            #     StatArb.checkRemainingSignalCount()
-
-            #     if StatArb.getNumPositionsCurrentlyOpen() > 0:
-
-            #         print("MORE THAN 0 POSITIONS REMAINING")
-
-            #         openPositions = StatArb.getOpenPositions()
-            #         unfilledOrders = StatArb.getUnfilledOrders()
-
-            #         print("openPositions     ", openPositions)
-            #         print("unfilledOrders    ", unfilledOrders)
-
-            #         StatArb.checkRemainingSignalCount()
-
-            #         StatArb.closeAllPositions()
-
-
         if datetime.now() > marketCloseTime:
 
             filePath = "DayTradeData.csv"
@@ -1033,8 +856,6 @@ if __name__ == '__main__':
             DataGather14.dayEndDataCalculations()
 
             sys.exit()
-
-
 
 
 
