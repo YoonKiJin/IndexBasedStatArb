@@ -8,9 +8,11 @@ Back-Test contains code and data files to run a simulation of the trading strate
 Deply contains code that can be run in during market hours to deply the strategy in real-time.
 
 CleanMinData.py
+
 takes in raw data and cleans it
 
 StatArb.py
+
 the actual strategy
 
 BackTesterMinData.py
