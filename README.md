@@ -38,7 +38,7 @@ StatArb.py (Deploy)
                 
                   
 
-                      How to run this Project:
+                      How to run this Project
 
 Back-Test     
 Running CleanMinData.py takes the csv data files in the uncleanedMinData folder and cleans the data. The cleaned data files are then saved into the minData folder.
@@ -50,6 +50,7 @@ StatArb.py - StatArb.py within the Deploy folder contains the class StatArb the 
 
 
                       Project Description
+                      
 The goal of this project was to produce two main components:
 1. A trading strategy that would prove to be profitable(regardless of how much) in the South Korean stock market
 2. A software environment that can support such a strategy(in both backtesting and real-time)
