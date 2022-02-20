@@ -1,4 +1,5 @@
 import math
+
 import numpy as np
 import pandas as pd
 
@@ -235,18 +236,17 @@ class IndexBasedStatArb:
 
     def updatePrevDaySpreadsMeanAndStd(self, invPctMvtInverted, normPctMvt):
 
-        invPctMvtInverted = list(invPctMvtInverted)
-        normPctMvt = list(normPctMvt)
+        invPctMvtInverted = np.array(invPctMvtInverted)
+        invPctMvtInverted[0] = 0
+        normCurrentPctMvt = np.array(normPctMvt)
+        normCurrentPctMvt[0] = 0
 
-        spreads = []
-        for index in range(len(invPctMvtInverted)):
-            spreads.append(invPctMvtInverted[index] - normPctMvt[index])
+        spreads = invPctMvtInverted - normCurrentPctMvt
 
-        spreads = pd.Series(spreads)
-
-        self.prevDayMean = spreads.mean()
-        self.prevDayStd = spreads.std()
+        self.prevDayMean = np.mean(spreads)
+        self.prevDayStd = np.std(spreads)
 
         self.invCurrentPctMvt = invPctMvtInverted[len(invPctMvtInverted) - 1]
-        self.normCurrentPctMvt = normPctMvt[len(normPctMvt) - 1]
-
+        self.normCurrentPctMvt = normCurrentPctMvt[len(normCurrentPctMvt) - 1]
+        
+        
