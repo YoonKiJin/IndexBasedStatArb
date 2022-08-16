@@ -4,7 +4,7 @@
 
 
 
-  Project Description
+      Project Description
                       
 The goal of this project was to produce two main components:
 1. A trading strategy that would prove to be profitable(disregarding level of profitability, due to the nature of the project being aimed toward personal educational purposes) in the South Korean stock market
@@ -27,7 +27,7 @@ The software environment was developed in Python, mainly using libraries Pandas,
 
 
 
-  Project Organization
+      Project Organization
              
 Within the src folder are two folders, Back-Test and Deploy
 
@@ -64,7 +64,7 @@ StatArb.py (Deploy)
                 
                   
 
-  How to run this Project
+      How to run this Project
 
 Back-Test     
 Running CleanMinData.py takes the csv data files in the uncleanedMinData folder and cleans the data. The cleaned data files are then saved into the minData folder.
