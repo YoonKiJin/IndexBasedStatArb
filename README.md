@@ -4,7 +4,7 @@
 
 
 
-                      Project Description
+             Project Description
                       
 The goal of this project was to produce two main components:
 1. A trading strategy that would prove to be profitable(disregarding level of profitability, due to the nature of the project being aimed toward personal educational purposes) in the South Korean stock market
@@ -27,7 +27,8 @@ The software environment was developed in Python, mainly using libraries Pandas,
 
 
 
-
+             Project Organization
+             
 Within the src folder are two folders, Back-Test and Deploy
 
 Back-Test contains code and data files to run a simulation of the trading strategy with historical data.
